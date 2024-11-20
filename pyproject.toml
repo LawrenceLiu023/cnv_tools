@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cnv_tools"
+description = "Tools for CNV analysis."
+requires-python = ">=3.12"
+dependencies = [
+    "dash-bio>=1.0.2",
+    "numpy>=2.1.3",
+    "pandas>=2.2.3",
+    "plotly>=5.24.1",
+    "polars>=1.14.0",
+    "pyarrow>=18.0.0",
+    "scikit-learn>=1.5.2",
+]
+dynamic = ["version", "readme"]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["cnv_tools*"]
+namespaces = false
+
+[tool.setuptools.dynamic]
+version = { attr = "cnv_tools.__version__" }
+readme = { file = "README.md" }
+
+
+[tool.ruff]
+select = [
+    "D",   # Enable `D` rule code prefix (pydocstyle)
+    "FIX", # Enable `FIX` rule code prefix (flake8-fixme)
+    "I",   # Enable `I` rule code prefix (isort)
+    "N",   # Enable `N` rule code prefix (pep8-naming)
+    "NPY", # Enable `NPY` rule code prefix (Numpy-specific rules)
+    "PD",  # Enable `PD` rule code prefix (pandas-vet)
+    "PL",  # Enable `PL` rule code prefix (Pylint)
+    "TD",  # Enable `TD` rule code prefix (flake8-todos)
+    "W",   # Enable `W` rule code prefix (pycodestyle warning)
+]
+ignore = [
+    "E501", # Never enforce `E501` (line length violations).
+    "D400", # Never enforce `D400` (docstring第一行要求英文句号结尾).
+    "W505", # Doc line too long.
+]
+unfixable = [
+    "F401", # Avoid trying to fix `F401` (unused-import).
+    "F841", # Avoid trying to fix `F841` (unused-variable).
+]
+pycodestyle.ignore-overlong-task-comments = true # Whether line-length violations (E501) should be triggered for comments starting with task-tags (by default: ["TODO", "FIXME", and "XXX"]).
+pydocstyle.convention = "numpy" # 可选: “google”, "numpy", "pep257"
+
+[[tool.uv.index]]
+name = "tsinghua"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = true

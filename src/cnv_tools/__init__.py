@@ -6,7 +6,7 @@ cnv_tools
 cnv_tools is a collection of tools for analysis of genome copy number data.
 """
 
-__version__ = "0.0.1"
+__version__ = "0.1.0"
 
 from cnv_tools.copy_number import (
     accuracy_score,

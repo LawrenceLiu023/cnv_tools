@@ -56,14 +56,37 @@ class CopyNumberWindow(CopyNumber):
 
     def __init__(
         self,
-        copy_number: PolarsFrame,
+        copy_number_data: PolarsFrame,
         chr_col="chr",
         start_col="start",
         end_col="end",
         copy_number_col="copy_number",
     ) -> None:
+        """
+        Create a `CopyNumberWindow`.
+
+        Parameters
+        ----------
+        copy_number_data : PolarsFrame
+            A polars DataFrame / LazyFrame containing the following information:
+            - chromosome
+            - start position
+            - end position
+            - copy number
+        chr_col : str, default "chr"
+            The column name of the chromosome column. Supported chromosome formats include:
+            - "chr1", "chr2", ..., "chrX", "chrY"
+            - "Chr1", "Chr2", ..., "ChrX", "ChrY"
+            - "1", "2", ..., "X", "Y"
+        start_col : str, default "start"
+            The column name of the start position column.
+        end_col : str, default "end"
+            The column name of the end position column. If `end_col` is the same as `start_col`, the result will include "start" and "end" columns that are the same.
+        copy_number_col : str, default "copy_number"
+            The column name of the chromosome column. The values can be integers or decimals.
+        """
         self.data: PolarsFrame = self.copy_number_preprocess(
-            copy_number_data=copy_number,
+            copy_number_data=copy_number_data,
             chr_col=chr_col,
             start_col=start_col,
             end_col=end_col,
@@ -134,9 +157,11 @@ class CopyNumberWindow(CopyNumber):
             if isinstance(joined_copy_number_data, pl.LazyFrame)
             else joined_copy_number_data
         )
-        result: float = metrics.accuracy_score(
-            joined_copy_number_df["integer_copy_number_true"],
-            joined_copy_number_df["integer_copy_number_pred"],
+        result: float = float(
+            metrics.accuracy_score(
+                joined_copy_number_df["integer_copy_number_true"],
+                joined_copy_number_df["integer_copy_number_pred"],
+            )
         )
         return result
 
@@ -173,9 +198,11 @@ class CopyNumberWindow(CopyNumber):
             if isinstance(joined_copy_number_data, pl.LazyFrame)
             else joined_copy_number_data
         )
-        result: float = metrics.recall_score(
-            joined_copy_number_df["integer_copy_number_true"],
-            joined_copy_number_df["integer_copy_number_pred"],
+        result: float = float(
+            metrics.recall_score(
+                joined_copy_number_df["integer_copy_number_true"],
+                joined_copy_number_df["integer_copy_number_pred"],
+            )
         )
         return result
 
@@ -212,9 +239,11 @@ class CopyNumberWindow(CopyNumber):
             if isinstance(joined_copy_number_data, pl.LazyFrame)
             else joined_copy_number_data
         )
-        result: float = metrics.precision_score(
-            joined_copy_number_df["integer_copy_number_true"],
-            joined_copy_number_df["integer_copy_number_pred"],
+        result: float = float(
+            metrics.precision_score(
+                joined_copy_number_df["integer_copy_number_true"],
+                joined_copy_number_df["integer_copy_number_pred"],
+            )
         )
         return result
 
@@ -251,10 +280,12 @@ class CopyNumberWindow(CopyNumber):
             if isinstance(joined_copy_number_data, pl.LazyFrame)
             else joined_copy_number_data
         )
-        result: float = (
-            joined_copy_number_df["copy_number_pred"]
-            - joined_copy_number_df["copy_number_true"]
-        ).std()
+        result: float = float(
+            (
+                joined_copy_number_df["copy_number_pred"]
+                - joined_copy_number_df["copy_number_true"]
+            ).std()
+        )
         return result
 
     def manhattan_plot_preprocess(self) -> PolarsFrame:

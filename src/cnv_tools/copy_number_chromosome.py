@@ -17,18 +17,67 @@ from cnv_tools.manhattan_plot import ManhattanPlot
 
 
 class CopyNumberChromosome(CopyNumber):
-    """Copy number information of chromosomes."""
+    """
+    Copy number information of chromosomes.
+
+    Attributes
+    ----------
+    data : PolarsFrame
+        Copy number data of genome windows. A polars DataFrame / LazyFrame containing the following columns:
+
+        - "chr": polars.String
+        - "copy_number": polars.Float32
+        - "integer_copy_number": polars.Int32
+
+        The "chr" column are like "1", "2", ..., "X", "Y". The rows are sorted by the "chr" and "start" columns. The "chr" column order are like "1", "2", ..., "22", "X", "Y". Other columns will not be modified.
+
+    Methods
+    -------
+    region_consistency_check(copy_number_x: CopyNumberWindow, copy_number_y: CopyNumberWindow) -> bool
+        Check if the regions (genome windows or chromosome names) of two copy number data are consistent.
+    accuracy_score(copy_number_true: CopyNumberWindow, copy_number_pred: CopyNumberWindow) -> float
+        Calculate the accuracy score of two copy number data.
+    recall_score(copy_number_true: CopyNumberWindow, copy_number_pred: CopyNumberWindow) -> float
+        Calculate the recall score of two copy number data.
+    precision_score(copy_number_true: CopyNumberWindow, copy_number_pred: CopyNumberWindow) -> float
+        Calculate the precision score of two copy number data.
+    difference_std(copy_number_true: CopyNumberWindow, copy_number_pred: CopyNumberWindow) -> float
+        Calculate the standard deviation of the difference between two copy number data.
+    """
 
     def __init__(
         self,
-        copy_number: PolarsFrame,
+        copy_number_data: PolarsFrame,
         chr_col="chr",
         start_col="start",
         end_col="end",
         copy_number_col="copy_number",
     ) -> None:
+        """
+        Create a `CopyNumberChromosome`.
+
+        Parameters
+        ----------
+        copy_number_data : PolarsFrame
+            A polars DataFrame / LazyFrame containing the following information:
+            - chromosome
+            - start position
+            - end position
+            - copy number
+        chr_col : str, default "chr"
+            The column name of the chromosome column. Supported chromosome formats include:
+            - "chr1", "chr2", ..., "chrX", "chrY"
+            - "Chr1", "Chr2", ..., "ChrX", "ChrY"
+            - "1", "2", ..., "X", "Y"
+        start_col : str, default "start"
+            The column name of the start position column.
+        end_col : str, default "end"
+            The column name of the end position column. If `end_col` is the same as `start_col`, the result will include "start" and "end" columns that are the same.
+        copy_number_col : str, default "copy_number"
+            The column name of the chromosome column. The values can be integers or decimals.
+        """
         self.data: PolarsFrame = self.copy_number_preprocess(
-            copy_number,
+            copy_number_data,
             chr_col=chr_col,
             start_col=start_col,
             end_col=end_col,
@@ -68,9 +117,11 @@ class CopyNumberChromosome(CopyNumber):
             if isinstance(joined_copy_number_data, pl.LazyFrame)
             else joined_copy_number_data
         )
-        result: float = metrics.accuracy_score(
-            joined_copy_number_df["integer_copy_number_true"],
-            joined_copy_number_df["integer_copy_number_pred"],
+        result: float = float(
+            metrics.accuracy_score(
+                joined_copy_number_df["integer_copy_number_true"],
+                joined_copy_number_df["integer_copy_number_pred"],
+            )
         )
         return result
 
@@ -92,9 +143,11 @@ class CopyNumberChromosome(CopyNumber):
             if isinstance(joined_copy_number_data, pl.LazyFrame)
             else joined_copy_number_data
         )
-        result: float = metrics.recall_score(
-            joined_copy_number_df["integer_copy_number_true"],
-            joined_copy_number_df["integer_copy_number_pred"],
+        result: float = float(
+            metrics.recall_score(
+                joined_copy_number_df["integer_copy_number_true"],
+                joined_copy_number_df["integer_copy_number_pred"],
+            )
         )
         return result
 
@@ -116,9 +169,11 @@ class CopyNumberChromosome(CopyNumber):
             if isinstance(joined_copy_number_data, pl.LazyFrame)
             else joined_copy_number_data
         )
-        result: float = metrics.precision_score(
-            joined_copy_number_df["integer_copy_number_true"],
-            joined_copy_number_df["integer_copy_number_pred"],
+        result: float = float(
+            metrics.precision_score(
+                joined_copy_number_df["integer_copy_number_true"],
+                joined_copy_number_df["integer_copy_number_pred"],
+            )
         )
         return result
 
@@ -140,8 +195,10 @@ class CopyNumberChromosome(CopyNumber):
             if isinstance(joined_copy_number_data, pl.LazyFrame)
             else joined_copy_number_data
         )
-        result: float = (
-            joined_copy_number_df["copy_number_pred"]
-            - joined_copy_number_df["copy_number_true"]
-        ).std()
+        result: float = float(
+            (
+                joined_copy_number_df["copy_number_pred"]
+                - joined_copy_number_df["copy_number_true"]
+            ).std()
+        )
         return result

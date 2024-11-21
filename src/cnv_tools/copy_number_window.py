@@ -378,10 +378,10 @@ class CopyNumberWindow(CopyNumber):
         ]
         for curr_chr_index in range(1, len(self.CHROMOSOME_NAMES)):
             # x-axis tick customise
-            last_chr_copy_number_df: pl.DataFrame = manhattan_data.filter(
+            last_chr_copy_number_df: pl.DataFrame = manhattan_df.filter(
                 pl.col("chr") == self.CHROMOSOME_NAMES[curr_chr_index - 1]
             ).select(pl.col(["chr", "position"]))
-            curr_chr_copy_number_df: pl.DataFrame = manhattan_data.filter(
+            curr_chr_copy_number_df: pl.DataFrame = manhattan_df.filter(
                 pl.col("chr") == self.CHROMOSOME_NAMES[curr_chr_index]
             ).select(pl.col(["chr", "position"]))
             curr_chr_x_min = (

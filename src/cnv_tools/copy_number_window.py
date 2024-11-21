@@ -334,10 +334,10 @@ class CopyNumberWindow(CopyNumber):
                 showlegend=False,
                 point_size=4,
             )
-            .update_layout(template="plotly_white", width=1200, height=400)
+            .update_layout(template="plotly_white", width=1600, height=400)
             .update_yaxes(range=[0, (max_copy_number := 4)])
         )
-        if len(manhattan_plot.data) not in [
+        if (chr_count := len(manhattan_plot.data)) not in [
             len(self.CHROMOSOME_NAMES),
             len(self.CHROMOSOME_NAMES) - 1,
         ]:
@@ -346,7 +346,6 @@ class CopyNumberWindow(CopyNumber):
             )
 
         # customise colours
-        chr_count: int = len(self.CHROMOSOME_NAMES)
         point_colours: list[str] = [
             "rgba(99,110,250,0.4)",
             "rgba(239,85,59,0.4)",
@@ -379,7 +378,7 @@ class CopyNumberWindow(CopyNumber):
         chr_pos_diff: list[list[str, int]] = [
             [self.CHROMOSOME_NAMES[curr_chr_index], last_base]
         ]
-        for curr_chr_index in range(1, len(self.CHROMOSOME_NAMES)):
+        for curr_chr_index in range(1, chr_count):
             # x-axis tick customise
             last_chr_copy_number_df: pl.DataFrame = manhattan_df.filter(
                 pl.col("chr") == self.CHROMOSOME_NAMES[curr_chr_index - 1]

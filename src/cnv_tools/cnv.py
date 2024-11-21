@@ -6,6 +6,8 @@ cnv
 A module for copy number variation analysis.
 """
 
+from typing import Self
+
 from cnv_tools._typing import PolarsFrame
 from cnv_tools.copy_number import CopyNumber
 
@@ -35,7 +37,7 @@ class Cnv(CopyNumber):
         chr_col: str = "chr",
         start_col: str = "start",
         end_col: str = "end",
-        cnv_type: str = "cnv_type",
+        cnv_type_col: str = "cnv_type",
         gain_value: str = "gain",
         loss_value: str = "loss",
     ) -> None:
@@ -52,7 +54,7 @@ class Cnv(CopyNumber):
             The column name of start position.
         end_col : str, default "end"
             The column name of end position.
-        cnv_type : str, default "cnv_type"
+        cnv_type_col : str, default "cnv_type"
             The column name of CNV type.
         gain_value : str, default "gain"
             The string represents type of gain.
@@ -76,7 +78,107 @@ class Cnv(CopyNumber):
             chr_col=chr_col,
             start_col=start_col,
             end_col=end_col,
-            cnv_type=cnv_type,
+            cnv_type_col=cnv_type_col,
             gain_value=gain_value,
             loss_value=loss_value,
         )
+
+    @classmethod
+    def region_consistency_check(cls, copy_number_x: Self, copy_number_y: Self) -> bool:
+        """
+        Check if the regions (genome windows or chromosome names) of two copy number data are consistent.
+
+        Parameters
+        ----------
+        copy_number_x : Self
+            A copy number data.
+        copy_number_y : Self
+            A copy number data.
+
+        Returns
+        -------
+        bool
+            If the regions of two copy number data are consistent, return True. Otherwise, return False.
+        """
+        # TODO
+        raise NotImplementedError
+
+    @classmethod
+    def accuracy_score(cls, copy_number_true: Self, copy_number_pred: Self) -> float:
+        """
+        Calculate the accuracy score of two copy number data.
+
+        Parameters
+        ----------
+        copy_number_true : Self
+            A copy number data as reference.
+        copy_number_pred : Self
+            A copy number data to be evaluated.
+
+        Returns
+        -------
+        float
+            The accuracy score of two copy number data.
+        """
+        # TODO
+        raise NotImplementedError
+
+    @classmethod
+    def recall_score(cls, copy_number_true: Self, copy_number_pred: Self) -> float:
+        """
+        Calculate the recall score of two copy number data.
+
+        Parameters
+        ----------
+        copy_number_true : Self
+            A copy number data as reference.
+        copy_number_pred : Self
+            A copy number data to be evaluated.
+
+        Returns
+        -------
+        float
+            The recall score of two copy number data.
+        """
+        # TODO
+        raise NotImplementedError
+
+    @classmethod
+    def precision_score(cls, copy_number_true: Self, copy_number_pred: Self) -> float:
+        """
+        Calculate the precision score of two copy number data.
+
+        Parameters
+        ----------
+        copy_number_true : Self
+            A copy number data as reference.
+        copy_number_pred : Self
+            A copy number data to be evaluated.
+
+        Returns
+        -------
+        float
+            The precision score of two copy number data.
+        """
+        # TODO
+        raise NotImplementedError
+
+    @classmethod
+    def difference_std(cls, copy_number_true: Self, copy_number_pred: Self) -> float:
+        """
+        Calculate the standard deviation of the difference between two copy number data.
+
+        Parameters
+        ----------
+        copy_number_true : Self
+            A copy number data as reference.
+        copy_number_pred : Self
+            A copy number data to be evaluated.
+
+        Returns
+        -------
+        float
+            The standard deviation of the difference between two copy number data.
+        """
+        # TODO
+        raise NotImplementedError

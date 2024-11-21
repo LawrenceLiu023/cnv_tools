@@ -185,7 +185,7 @@ class CopyNumber(ABC):
         chr_col: str = "chr",
         start_col: str = "start",
         end_col: str = "end",
-        cnv_type: str = "cnv_type",
+        cnv_type_col: str = "cnv_type",
         gain_value: str = "gain",
         loss_value: str = "loss",
     ) -> PolarsFrame:
@@ -202,7 +202,7 @@ class CopyNumber(ABC):
             The column name of start position.
         end_col : str, default "end"
             The column name of end position.
-        cnv_type : str, default "cnv_type"
+        cnv_type_col : str, default "cnv_type"
             The column name of CNV type.
         gain_value : str, default "gain"
             The string represents type of gain.
@@ -257,7 +257,7 @@ class CopyNumber(ABC):
             cnv_lf = cnv_lf.rename({end_col: "end"})
 
         # CNV type
-        cnv_lf = cnv_lf.rename({cnv_type: "cnv_type"}).with_columns(
+        cnv_lf = cnv_lf.rename({cnv_type_col: "cnv_type"}).with_columns(
             pl.col("cnv_type").replace_strict({gain_value: "gain", loss_value: "loss"})
         )
         cnv_lf = cnv_lf.cast(

@@ -54,17 +54,20 @@ class ManhattanPlot:
         """Create CNV lines for manhattan plot."""
         cnv_traces: list[go.Trace] = []
         cnv_traces_data: PolarsFrame = copy_number.manhattan_plot_preprocess()
-        cnv_traces_data = cnv_traces_data.join(
-            other=self.position_converter, on="chr", how="left", coalesce=True
-        )
-        cnv_traces_data = cnv_traces_data.with_columns(
-            manhattan_start=pl.col("start") + pl.col("position_diff"),
-            manhattan_end=pl.col("end") + pl.col("position_diff"),
-        ).select(pl.col(["chr", "manhattan_start", "manhattan_end", "copy_number"]))
         cnv_traces_df: pl.DataFrame = (
             cnv_traces_data.collect()
             if isinstance(cnv_traces_data, pl.LazyFrame)
             else cnv_traces_data
+        )
+        cnv_traces_df = (
+            cnv_traces_df.join(
+                other=self.position_converter, on="chr", how="left", coalesce=True
+            )
+            .with_columns(
+                manhattan_start=pl.col("start") + pl.col("position_diff"),
+                manhattan_end=pl.col("end") + pl.col("position_diff"),
+            )
+            .select(pl.col(["chr", "manhattan_start", "manhattan_end", "copy_number"]))
         )
         for curr_row in cnv_traces_df.iter_rows(named=True):
             curr_row_trace_df = pl.DataFrame(

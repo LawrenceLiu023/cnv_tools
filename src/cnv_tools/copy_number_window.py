@@ -337,7 +337,10 @@ class CopyNumberWindow(CopyNumber):
             .update_layout(template="plotly_white", width=1200, height=400)
             .update_yaxes(range=[0, (max_copy_number := 4)])
         )
-        if len(manhattan_plot.data) != len(self.CHROMOSOME_NAMES):
+        if len(manhattan_plot.data) not in [
+            len(self.CHROMOSOME_NAMES),
+            len(self.CHROMOSOME_NAMES) - 1,
+        ]:
             raise ValueError(
                 f"Unexpected number of chromosomes in the plot: {len(manhattan_plot.data)}."
             )

@@ -24,15 +24,17 @@ class CopyNumber(ABC):
         self.data: PolarsFrame
         raise NotImplementedError
 
-    def collect(self) -> None:
+    def collect(self) -> Self:
         """Ensure `data` is a polars DataFrame."""
         if isinstance(self.data, pl.LazyFrame):
             self.data = self.data.collect()
+        return self
 
-    def lazy(self) -> None:
+    def lazy(self) -> Self:
         """Ensure `data` is a polars LazyFrame."""
         if isinstance(self.data, pl.DataFrame):
             self.data = self.data.lazy()
+        return self
 
     @classmethod
     def copy_number_preprocess(

@@ -7,7 +7,7 @@ Classes for copy number data. This module defines the basic data structure for c
 """
 
 from abc import ABC, abstractmethod
-from typing import Self
+from typing import Callable, Self, Sequence
 
 import polars as pl
 
@@ -22,15 +22,25 @@ class CopyNumber(ABC):
     @abstractmethod
     def __init__(self) -> None:
         self.data: PolarsFrame
-        pass
+        raise NotImplementedError
+
+    def collect(self) -> None:
+        """Ensure `data` is a polars DataFrame."""
+        if isinstance(self.data, pl.LazyFrame):
+            self.data = self.data.collect()
+
+    def lazy(self) -> None:
+        """Ensure `data` is a polars LazyFrame."""
+        if isinstance(self.data, pl.DataFrame):
+            self.data = self.data.lazy()
 
     @classmethod
     def copy_number_preprocess(
         cls,
         copy_number_data: PolarsFrame,
         chr_col: str = "chr",
-        start_col: str = "start",
-        end_col: str = "end",
+        start_col: str | None = "start",
+        end_col: str | None = "end",
         copy_number_col: str = "copy_number",
     ) -> PolarsFrame:
         """
@@ -49,10 +59,10 @@ class CopyNumber(ABC):
             - "chr1", "chr2", ..., "chrX", "chrY"
             - "Chr1", "Chr2", ..., "ChrX", "ChrY"
             - "1", "2", ..., "X", "Y"
-        start_col : str, default "start"
-            The column name of the start position column.
+        start_col : str | None, default "start"
+            The column name of the start position column. Either `start_col` or `end_col` is `None` means there is no start column, e.g. for chromosome copy number data.
         end_col : str, default "end"
-            The column name of the end position column. If `end_col` is the same as `start_col`, the result will include "start" and "end" columns that are the same.
+            The column name of the end position column. If `end_col` is the same as `start_col`, the result will include "start" and "end" columns that are the same. Either `start_col` or `end_col` is `None` means there is no start column, e.g. for chromosome copy number data.
         copy_number_col : str, default "copy_number"
             The column name of the chromosome column. The values can be integers or decimals.
 
@@ -79,6 +89,12 @@ class CopyNumber(ABC):
                 f"`copy_number_data` must be `polars.DataFrame` or `polars.LazyFrame`. Got {type(copy_number_data)}"
             )
 
+        copy_number_lf_schema: dict = {
+            "chr": pl.String,
+            "copy_number": pl.Float32,
+            "integer_copy_number": pl.Int32,
+        }
+
         # chromosome
         # Rename the column as "chr". Format: 1, 2, 3, ..., 22, X, Y
         chr_col_unique_series: pl.Series = copy_number_lf.select(
@@ -95,14 +111,20 @@ class CopyNumber(ABC):
         else:
             copy_number_lf = copy_number_lf.rename({chr_col: "chr"})
 
-        # start
-        copy_number_lf = copy_number_lf.rename({start_col: "start"})
+        # start and end
+        if (start_col is not None) and (end_col is not None):
+            copy_number_lf_schema.update(
+                {
+                    "start": pl.Int64,
+                    "end": pl.Int64,
+                }
+            )
+            copy_number_lf = copy_number_lf.rename({start_col: "start"})
 
-        # end
-        if end_col == start_col:
-            copy_number_lf = copy_number_lf.with_columns(end=pl.col("start"))
-        else:
-            copy_number_lf = copy_number_lf.rename({end_col: "end"})
+            if end_col == start_col:
+                copy_number_lf = copy_number_lf.with_columns(end=pl.col("start"))
+            else:
+                copy_number_lf = copy_number_lf.rename({end_col: "end"})
 
         # copy number
         copy_number_lf = copy_number_lf.rename(
@@ -112,15 +134,7 @@ class CopyNumber(ABC):
         )
 
         # data type
-        copy_number_lf = copy_number_lf.cast(
-            {
-                "chr": pl.String,
-                "start": pl.Int64,
-                "end": pl.Int64,
-                "copy_number": pl.Float32,
-                "integer_copy_number": pl.Int32,
-            }
-        )
+        copy_number_lf = copy_number_lf.cast(copy_number_lf_schema)
 
         copy_number_lf = copy_number_lf.filter(
             pl.col("chr").is_in(cls.CHROMOSOME_NAMES)
@@ -307,7 +321,7 @@ class CopyNumber(ABC):
         bool
             If the regions of two copy number data are consistent, return True. Otherwise, return False.
         """
-        pass
+        raise NotImplementedError
 
     @classmethod
     @abstractmethod
@@ -327,7 +341,7 @@ class CopyNumber(ABC):
         float
             The accuracy score of two copy number data.
         """
-        pass
+        raise NotImplementedError
 
     @classmethod
     @abstractmethod
@@ -347,7 +361,7 @@ class CopyNumber(ABC):
         float
             The recall score of two copy number data.
         """
-        pass
+        raise NotImplementedError
 
     @classmethod
     @abstractmethod
@@ -367,7 +381,7 @@ class CopyNumber(ABC):
         float
             The precision score of two copy number data.
         """
-        pass
+        raise NotImplementedError
 
     @classmethod
     @abstractmethod
@@ -387,7 +401,25 @@ class CopyNumber(ABC):
         float
             The standard deviation of the difference between two copy number data.
         """
-        pass
+        raise NotImplementedError
+
+    @classmethod
+    @abstractmethod
+    def mean(cls, copy_numbers: Sequence[Self]) -> Self:
+        """
+        Calculate the mean copy number of multiple copy number data. `CopyNumber.region_consistency_check()` will ber performed before calculating the mean.
+
+        Parameters
+        ----------
+        copy_numbers : Iterable[CopyNumber]
+            Multiple copy number data.
+
+        Returns
+        -------
+        CopyNumber
+            The mean of multiple copy number data as a `CopyNumber` object.
+        """
+        raise NotImplementedError
 
 
 def region_consistency_check(
@@ -497,3 +529,27 @@ def difference_std(copy_number_true: CopyNumber, copy_number_pred: CopyNumber) -
     return copy_number_true.difference_std(
         copy_number_true=copy_number_true, copy_number_pred=copy_number_pred
     )
+
+
+def mean(copy_numbers: Sequence[CopyNumber]) -> CopyNumber:
+    """
+    Calculate the mean copy number of multiple copy number data. `CopyNumber.region_consistency_check()` will ber performed before calculating the mean.
+
+    Parameters
+    ----------
+    copy_numbers : Sequence[CopyNumber]
+        Multiple copy number data.
+
+    Returns
+    -------
+    CopyNumber
+        The mean of multiple copy number data as a `CopyNumber` object.
+    """
+    copy_numbers_type_set: set = {type(x) for x in copy_numbers}
+    copy_number_type_number: int = len(copy_numbers_type_set)
+    if copy_number_type_number != 1:
+        raise ValueError(
+            f"`copy_numbers` should be of the same type, got types: {str(copy_numbers_type_set)}"
+        )
+    mean_func: Callable = copy_numbers[0].mean
+    return mean_func(copy_numbers=copy_numbers)

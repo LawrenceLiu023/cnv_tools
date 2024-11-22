@@ -6,12 +6,13 @@ cnv_tools
 cnv_tools is a collection of tools for analysis of genome copy number data.
 """
 
-__version__ = "0.1.2"
+__version__ = "0.2.2"
 
 from cnv_tools.cnv import Cnv
 from cnv_tools.copy_number import (
     accuracy_score,
     difference_std,
+    mean,
     precision_score,
     recall_score,
     region_consistency_check,
@@ -27,6 +28,7 @@ __all__: list[str] = [
     "ManhattanPlot",
     "accuracy_score",
     "difference_std",
+    "mean",
     "manhattan_plot",
     "precision_score",
     "recall_score",

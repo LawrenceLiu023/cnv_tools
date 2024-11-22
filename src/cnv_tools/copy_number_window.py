@@ -6,7 +6,7 @@ copy_number_window
 Copy number data of genome windows.
 """
 
-from typing import Self
+from typing import Self, Sequence
 
 import dash_bio
 import numpy as np
@@ -57,10 +57,10 @@ class CopyNumberWindow(CopyNumber):
     def __init__(
         self,
         copy_number_data: PolarsFrame,
-        chr_col="chr",
-        start_col="start",
-        end_col="end",
-        copy_number_col="copy_number",
+        chr_col: str = "chr",
+        start_col: str = "start",
+        end_col: str = "end",
+        copy_number_col: str = "copy_number",
     ) -> None:
         """
         Create a `CopyNumberWindow`.
@@ -285,6 +285,68 @@ class CopyNumberWindow(CopyNumber):
                 joined_copy_number_df["copy_number_pred"]
                 - joined_copy_number_df["copy_number_true"]
             ).std()
+        )
+        return result
+
+    @classmethod
+    def mean(cls, copy_numbers: Sequence[Self]) -> Self:
+        """
+        Calculate the mean copy number of multiple copy number data. `CopyNumberWindow.region_consistency_check()` will ber performed before calculating the mean.
+
+        Parameters
+        ----------
+        copy_numbers : Iterable[CopyNumberWindow]
+            Multiple copy number data.
+
+        Returns
+        -------
+        CopyNumberWindow
+            The mean of multiple copy number data as a `CopyNumberWindow` object.
+        """
+        data_number: int = len(copy_numbers)
+        for i in range(data_number - 1):
+            if not cls.region_consistency_check(copy_numbers[i], copy_numbers[i + 1]):
+                raise ValueError("The regions of copy number data are inconsistent.")
+
+        def copy_numbers_get_cn(i: int) -> pl.Series:
+            if isinstance(copy_numbers[i].data, pl.LazyFrame):
+                return (
+                    copy_numbers[i]
+                    .data.select(["copy_number"])
+                    .collect()
+                    .get_column("copy_number")
+                )
+            else:
+                return (
+                    copy_numbers[i]
+                    .data.select(["copy_number"])
+                    .get_column("copy_number")
+                )
+
+        copy_number_mean: pl.Series = copy_numbers_get_cn(0) / data_number
+
+        for i in range(1, data_number):
+            copy_number_mean = copy_number_mean + (copy_numbers_get_cn(i) / data_number)
+
+        result_df: pl.DataFrame
+        if isinstance(copy_numbers[0].data, pl.LazyFrame):
+            result_df = (
+                copy_numbers[0]
+                .data.with_columns(
+                    copy_number=copy_number_mean,
+                    copy_number_integer=copy_number_mean.round(0),
+                )
+                .collect()
+            )
+        else:
+            result_df = copy_numbers[0].data.with_columns(copy_number=copy_number_mean)
+
+        result = CopyNumberWindow(
+            copy_number_data=result_df,
+            chr_col="chr",
+            start_col="start",
+            end_col="end",
+            copy_number_col="copy_number",
         )
         return result
 

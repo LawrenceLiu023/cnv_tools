@@ -7,7 +7,7 @@ Classes for copy number data. This module defines the basic data structure for c
 """
 
 from abc import ABC, abstractmethod
-from typing import Callable, Self, Sequence
+from typing import Callable, Literal, Self, Sequence
 
 import polars as pl
 
@@ -347,7 +347,12 @@ class CopyNumber(ABC):
 
     @classmethod
     @abstractmethod
-    def recall_score(cls, copy_number_true: Self, copy_number_pred: Self) -> float:
+    def recall_score(
+        cls,
+        copy_number_true: Self,
+        copy_number_pred: Self,
+        average: Literal["micro", "samples", "weighted", "macro"] | None = "macro",
+    ) -> float:
         """
         Calculate the recall score of two copy number data.
 
@@ -357,6 +362,23 @@ class CopyNumber(ABC):
             A copy number data as reference.
         copy_number_pred : Self
             A copy number data to be evaluated.
+        average : Literal["micro", "samples", "weighted", "macro"] | None, default  "macro"
+            If ``None``, the scores for each class are returned. Otherwise,
+            this determines the type of averaging performed on the data:
+
+            ``'micro'``:
+                Calculate metrics globally by considering each element of the label
+                indicator matrix as a label.
+            ``'macro'``:
+                Calculate metrics for each label, and find their unweighted
+                mean.  This does not take label imbalance into account.
+            ``'weighted'``:
+                Calculate metrics for each label, and find their average, weighted
+                by support (the number of true instances for each label).
+            ``'samples'``:
+                Calculate metrics for each instance, and find their average.
+
+            Will be ignored when ``y_true`` is binary.
 
         Returns
         -------
@@ -367,7 +389,12 @@ class CopyNumber(ABC):
 
     @classmethod
     @abstractmethod
-    def precision_score(cls, copy_number_true: Self, copy_number_pred: Self) -> float:
+    def precision_score(
+        cls,
+        copy_number_true: Self,
+        copy_number_pred: Self,
+        average: Literal["micro", "samples", "weighted", "macro"] | None = "macro",
+    ) -> float:
         """
         Calculate the precision score of two copy number data.
 
@@ -377,6 +404,23 @@ class CopyNumber(ABC):
             A copy number data as reference.
         copy_number_pred : Self
             A copy number data to be evaluated.
+        average : Literal["micro", "samples", "weighted", "macro"] | None, default  "macro"
+            If ``None``, the scores for each class are returned. Otherwise,
+            this determines the type of averaging performed on the data:
+
+            ``'micro'``:
+                Calculate metrics globally by considering each element of the label
+                indicator matrix as a label.
+            ``'macro'``:
+                Calculate metrics for each label, and find their unweighted
+                mean.  This does not take label imbalance into account.
+            ``'weighted'``:
+                Calculate metrics for each label, and find their average, weighted
+                by support (the number of true instances for each label).
+            ``'samples'``:
+                Calculate metrics for each instance, and find their average.
+
+            Will be ignored when ``y_true`` is binary.
 
         Returns
         -------
@@ -468,7 +512,11 @@ def accuracy_score(copy_number_true: CopyNumber, copy_number_pred: CopyNumber) -
     )
 
 
-def recall_score(copy_number_true: CopyNumber, copy_number_pred: CopyNumber) -> float:
+def recall_score(
+    copy_number_true: CopyNumber,
+    copy_number_pred: CopyNumber,
+    average: Literal["micro", "samples", "weighted", "macro"] | None = "macro",
+) -> float:
     """
     Calculate the recall score of two copy number data.
 
@@ -478,6 +526,23 @@ def recall_score(copy_number_true: CopyNumber, copy_number_pred: CopyNumber) -> 
         A copy number data as reference.
     copy_number_pred : Self
         A copy number data to be evaluated.
+    average : Literal["micro", "samples", "weighted", "macro"] | None, default  "macro"
+        If ``None``, the scores for each class are returned. Otherwise,
+        this determines the type of averaging performed on the data:
+
+        ``'micro'``:
+            Calculate metrics globally by considering each element of the label
+            indicator matrix as a label.
+        ``'macro'``:
+            Calculate metrics for each label, and find their unweighted
+            mean.  This does not take label imbalance into account.
+        ``'weighted'``:
+            Calculate metrics for each label, and find their average, weighted
+            by support (the number of true instances for each label).
+        ``'samples'``:
+            Calculate metrics for each instance, and find their average.
+
+        Will be ignored when ``y_true`` is binary.
 
     Returns
     -------
@@ -485,12 +550,16 @@ def recall_score(copy_number_true: CopyNumber, copy_number_pred: CopyNumber) -> 
         The recall score of two copy number data.
     """
     return copy_number_true.recall_score(
-        copy_number_true=copy_number_true, copy_number_pred=copy_number_pred
+        copy_number_true=copy_number_true,
+        copy_number_pred=copy_number_pred,
+        average=average,
     )
 
 
 def precision_score(
-    copy_number_true: CopyNumber, copy_number_pred: CopyNumber
+    copy_number_true: CopyNumber,
+    copy_number_pred: CopyNumber,
+    average: Literal["micro", "samples", "weighted", "macro"] | None = "macro",
 ) -> float:
     """
     Calculate the precision score of two copy number data.
@@ -501,6 +570,23 @@ def precision_score(
         A copy number data as reference.
     copy_number_pred : Self
         A copy number data to be evaluated.
+    average : Literal["micro", "samples", "weighted", "macro"] | None, default  "macro"
+        If ``None``, the scores for each class are returned. Otherwise,
+        this determines the type of averaging performed on the data:
+
+        ``'micro'``:
+            Calculate metrics globally by considering each element of the label
+            indicator matrix as a label.
+        ``'macro'``:
+            Calculate metrics for each label, and find their unweighted
+            mean.  This does not take label imbalance into account.
+        ``'weighted'``:
+            Calculate metrics for each label, and find their average, weighted
+            by support (the number of true instances for each label).
+        ``'samples'``:
+            Calculate metrics for each instance, and find their average.
+
+        Will be ignored when ``y_true`` is binary.
 
     Returns
     -------
@@ -508,7 +594,9 @@ def precision_score(
         The precision score of two copy number data.
     """
     return copy_number_true.precision_score(
-        copy_number_true=copy_number_true, copy_number_pred=copy_number_pred
+        copy_number_true=copy_number_true,
+        copy_number_pred=copy_number_pred,
+        average=average,
     )
 
 

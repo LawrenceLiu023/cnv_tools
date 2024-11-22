@@ -6,7 +6,7 @@ copy_number_window
 Copy number data of genome windows.
 """
 
-from typing import Self, Sequence
+from typing import Literal, Self, Sequence
 
 import dash_bio
 import numpy as np
@@ -42,9 +42,9 @@ class CopyNumberWindow(CopyNumber):
         Check if the regions (genome windows or chromosome names) of two copy number data are consistent.
     accuracy_score(copy_number_true: CopyNumberWindow, copy_number_pred: CopyNumberWindow) -> float
         Calculate the accuracy score of two copy number data.
-    recall_score(copy_number_true: CopyNumberWindow, copy_number_pred: CopyNumberWindow) -> float
+    recall_score(copy_number_true: CopyNumberWindow, copy_number_pred: CopyNumberWindow, average: Literal["micro", "samples", "weighted", "macro"] | None) -> float
         Calculate the recall score of two copy number data.
-    precision_score(copy_number_true: CopyNumberWindow, copy_number_pred: CopyNumberWindow) -> float
+    precision_score(copy_number_true: CopyNumberWindow, copy_number_pred: CopyNumberWindow, average: Literal["micro", "samples", "weighted", "macro"] | None) -> float
         Calculate the precision score of two copy number data.
     difference_std(copy_number_true: CopyNumberWindow, copy_number_pred: CopyNumberWindow) -> float
         Calculate the standard deviation of the difference between two copy number data.
@@ -166,7 +166,12 @@ class CopyNumberWindow(CopyNumber):
         return result
 
     @classmethod
-    def recall_score(cls, copy_number_true: Self, copy_number_pred: Self) -> float:
+    def recall_score(
+        cls,
+        copy_number_true: Self,
+        copy_number_pred: Self,
+        average: Literal["micro", "samples", "weighted", "macro"] | None = "macro",
+    ) -> float:
         """
         Calculate the recall score of two copy number data.
 
@@ -176,6 +181,23 @@ class CopyNumberWindow(CopyNumber):
             A copy number data as reference.
         copy_number_pred : Self
             A copy number data to be evaluated.
+        average : Literal["micro", "samples", "weighted", "macro"] | None, default  "macro"
+            If ``None``, the scores for each class are returned. Otherwise,
+            this determines the type of averaging performed on the data:
+
+            ``'micro'``:
+                Calculate metrics globally by considering each element of the label
+                indicator matrix as a label.
+            ``'macro'``:
+                Calculate metrics for each label, and find their unweighted
+                mean.  This does not take label imbalance into account.
+            ``'weighted'``:
+                Calculate metrics for each label, and find their average, weighted
+                by support (the number of true instances for each label).
+            ``'samples'``:
+                Calculate metrics for each instance, and find their average.
+
+            Will be ignored when ``y_true`` is binary.
 
         Returns
         -------
@@ -202,12 +224,18 @@ class CopyNumberWindow(CopyNumber):
             metrics.recall_score(
                 joined_copy_number_df["integer_copy_number_true"],
                 joined_copy_number_df["integer_copy_number_pred"],
+                average=average,
             )
         )
         return result
 
     @classmethod
-    def precision_score(cls, copy_number_true: Self, copy_number_pred: Self) -> float:
+    def precision_score(
+        cls,
+        copy_number_true: Self,
+        copy_number_pred: Self,
+        average: Literal["micro", "samples", "weighted", "macro"] | None = "macro",
+    ) -> float:
         """
         Calculate the precision score of two copy number data.
 
@@ -217,6 +245,23 @@ class CopyNumberWindow(CopyNumber):
             A copy number data as reference.
         copy_number_pred : Self
             A copy number data to be evaluated.
+        average : Literal["micro", "samples", "weighted", "macro"] | None, default  "macro"
+            If ``None``, the scores for each class are returned. Otherwise,
+            this determines the type of averaging performed on the data:
+
+            ``'micro'``:
+                Calculate metrics globally by considering each element of the label
+                indicator matrix as a label.
+            ``'macro'``:
+                Calculate metrics for each label, and find their unweighted
+                mean.  This does not take label imbalance into account.
+            ``'weighted'``:
+                Calculate metrics for each label, and find their average, weighted
+                by support (the number of true instances for each label).
+            ``'samples'``:
+                Calculate metrics for each instance, and find their average.
+
+            Will be ignored when ``y_true`` is binary.
 
         Returns
         -------
@@ -243,6 +288,7 @@ class CopyNumberWindow(CopyNumber):
             metrics.precision_score(
                 joined_copy_number_df["integer_copy_number_true"],
                 joined_copy_number_df["integer_copy_number_pred"],
+                average=average,
             )
         )
         return result

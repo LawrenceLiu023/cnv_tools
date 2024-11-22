@@ -6,7 +6,7 @@ copy_number_chromosome
 Copy number data of chromosomes.
 """
 
-from typing import Self, Sequence
+from typing import Literal, Self, Sequence
 
 import polars as pl
 from sklearn import metrics
@@ -37,9 +37,9 @@ class CopyNumberChromosome(CopyNumber):
         Check if the regions (genome windows or chromosome names) of two copy number data are consistent.
     accuracy_score(copy_number_true: CopyNumberWindow, copy_number_pred: CopyNumberWindow) -> float
         Calculate the accuracy score of two copy number data.
-    recall_score(copy_number_true: CopyNumberWindow, copy_number_pred: CopyNumberWindow) -> float
+    recall_score(copy_number_true: CopyNumberWindow, copy_number_pred: CopyNumberWindow, average: Literal["micro", "samples", "weighted", "macro"] | None) -> float
         Calculate the recall score of two copy number data.
-    precision_score(copy_number_true: CopyNumberWindow, copy_number_pred: CopyNumberWindow) -> float
+    precision_score(copy_number_true: CopyNumberWindow, copy_number_pred: CopyNumberWindow, average: Literal["micro", "samples", "weighted", "macro"] | None) -> float
         Calculate the precision score of two copy number data.
     difference_std(copy_number_true: CopyNumberWindow, copy_number_pred: CopyNumberWindow) -> float
         Calculate the standard deviation of the difference between two copy number data.
@@ -126,7 +126,12 @@ class CopyNumberChromosome(CopyNumber):
         return result
 
     @classmethod
-    def recall_score(cls, copy_number_true: Self, copy_number_pred: Self) -> float:
+    def recall_score(
+        cls,
+        copy_number_true: Self,
+        copy_number_pred: Self,
+        average: Literal["micro", "samples", "weighted", "macro"] | None = "macro",
+    ) -> float:
         region_cols: list[str] = ["chr"]
         required_cols: list[str] = region_cols + ["integer_copy_number"]
         copy_number_true_data: PolarsFrame = copy_number_true.data.select(
@@ -147,12 +152,18 @@ class CopyNumberChromosome(CopyNumber):
             metrics.recall_score(
                 joined_copy_number_df["integer_copy_number_true"],
                 joined_copy_number_df["integer_copy_number_pred"],
+                average=average,
             )
         )
         return result
 
     @classmethod
-    def precision_score(cls, copy_number_true: Self, copy_number_pred: Self) -> float:
+    def precision_score(
+        cls,
+        copy_number_true: Self,
+        copy_number_pred: Self,
+        average: Literal["micro", "samples", "weighted", "macro"] | None = "macro",
+    ) -> float:
         region_cols: list[str] = ["chr"]
         required_cols: list[str] = region_cols + ["integer_copy_number"]
         copy_number_true_data: PolarsFrame = copy_number_true.data.select(
@@ -173,6 +184,7 @@ class CopyNumberChromosome(CopyNumber):
             metrics.precision_score(
                 joined_copy_number_df["integer_copy_number_true"],
                 joined_copy_number_df["integer_copy_number_pred"],
+                average=average,
             )
         )
         return result

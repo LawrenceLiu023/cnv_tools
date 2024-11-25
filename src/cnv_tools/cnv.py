@@ -182,3 +182,5 @@ class Cnv(CopyNumber):
         """
         # TODO
         raise NotImplementedError
+
+    # TODO: Jaccard Index: The intersection of length of genome regions of CNV calls between two call sets divided by the union length.

@@ -467,6 +467,27 @@ class CopyNumber(ABC):
         """
         raise NotImplementedError
 
+    # TODO
+    # @classmethod
+    # @abstractmethod
+    # def correlation_coefficient(cls, copy_number_x: Self, copy_number_y: Self) -> float:
+    #     """
+    #     Calculate the correlation coefficient between two copy number data. `CopyNumber.region_consistency_check()` will ber performed before calculating the correlation coefficient.
+
+    #     Parameters
+    #     ----------
+    #     copy_number_x : CopyNumber
+    #         A copy number data.
+    #     copy_number_y : CopyNumber
+    #         A copy number data.
+
+    #     Returns
+    #     -------
+    #     float
+    #         Correlation coefficient between two copy number data.
+    #     """
+    #     raise NotImplementedError
+
 
 def region_consistency_check(
     copy_number_x: CopyNumber, copy_number_y: CopyNumber

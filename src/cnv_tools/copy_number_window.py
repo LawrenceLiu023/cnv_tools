@@ -396,6 +396,66 @@ class CopyNumberWindow(CopyNumber):
         )
         return result
 
+    @classmethod
+    def correlation_coefficient(
+        cls,
+        copy_number_x: Self,
+        copy_number_y: Self,
+        method: Literal["pearson", "spearman"] = "pearson",
+    ) -> float:
+        """
+        Calculate the correlation coefficient between two copy number data. `CopyNumber.region_consistency_check()` will ber performed before calculating the correlation coefficient.
+
+        Parameters
+        ----------
+        copy_number_x : CopyNumber
+            A copy number data.
+        copy_number_y : CopyNumber
+            A copy number data.
+        method : Literal["pearson", "spearman"], default "pearson"
+            The method to calculate the correlation coefficient. Currently, only "pearson" is supported.
+
+        Returns
+        -------
+        float
+            Correlation coefficient between two copy number data.
+        """
+        if (
+            cls.region_consistency_check(
+                copy_number_x=copy_number_x, copy_number_y=copy_number_y
+            )
+            is False
+        ):
+            raise ValueError("The regions of copy number data are inconsistent.")
+
+        required_cols: list[str] = ["copy_number"]
+        copy_number_x_data: PolarsFrame = copy_number_x.data.select(required_cols)
+        copy_number_y_data: PolarsFrame = copy_number_y.data.select(required_cols)
+        copy_number_x_df: pl.DataFrame = (
+            copy_number_x_data.collect()
+            if isinstance(copy_number_x_data, pl.LazyFrame)
+            else copy_number_x_data
+        )
+        copy_number_y_df: pl.DataFrame = (
+            copy_number_y_data.collect()
+            if isinstance(copy_number_y_data, pl.LazyFrame)
+            else copy_number_y_data
+        )
+        result_df: pl.DataFrame = (
+            copy_number_x_df.rename({"copy_number": "copy_number_x"})
+            .with_columns(copy_number_y=copy_number_y_df["copy_number"])
+            .select(
+                pl.corr(
+                    "copy_number_x",
+                    "copy_number_y",
+                    propagate_nans=True,  # any `NaN` will lead to `NaN` output
+                    method=method,
+                )
+            )
+        )
+        result: float = float(result_df[0, 0])
+        return result
+
     def manhattan_plot_preprocess(self) -> PolarsFrame:
         """Preprocess the data for manhattan plot."""
         manhattan_data: PolarsFrame = (

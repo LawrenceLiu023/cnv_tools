@@ -11,6 +11,7 @@ __version__ = "0.2.4"
 from cnv_tools.cnv import Cnv
 from cnv_tools.copy_number import (
     accuracy_score,
+    correlation_coefficient,
     difference_std,
     mean,
     precision_score,
@@ -27,6 +28,7 @@ __all__: list[str] = [
     "CopyNumberWindow",
     "ManhattanPlot",
     "accuracy_score",
+    "correlation_coefficient",
     "difference_std",
     "mean",
     "manhattan_plot",

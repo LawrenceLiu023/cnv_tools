@@ -467,26 +467,32 @@ class CopyNumber(ABC):
         """
         raise NotImplementedError
 
-    # TODO
-    # @classmethod
-    # @abstractmethod
-    # def correlation_coefficient(cls, copy_number_x: Self, copy_number_y: Self) -> float:
-    #     """
-    #     Calculate the correlation coefficient between two copy number data. `CopyNumber.region_consistency_check()` will ber performed before calculating the correlation coefficient.
+    @classmethod
+    @abstractmethod
+    def correlation_coefficient(
+        cls,
+        copy_number_x: Self,
+        copy_number_y: Self,
+        method: Literal["pearson", "spearman"] = "pearson",
+    ) -> float:
+        """
+        Calculate the correlation coefficient between two copy number data. `CopyNumber.region_consistency_check()` will ber performed before calculating the correlation coefficient.
 
-    #     Parameters
-    #     ----------
-    #     copy_number_x : CopyNumber
-    #         A copy number data.
-    #     copy_number_y : CopyNumber
-    #         A copy number data.
+        Parameters
+        ----------
+        copy_number_x : CopyNumber
+            A copy number data.
+        copy_number_y : CopyNumber
+            A copy number data.
+        method : Literal["pearson", "spearman"], default "pearson"
+            The method to calculate the correlation coefficient. Currently, only "pearson" is supported.
 
-    #     Returns
-    #     -------
-    #     float
-    #         Correlation coefficient between two copy number data.
-    #     """
-    #     raise NotImplementedError
+        Returns
+        -------
+        float
+            Correlation coefficient between two copy number data.
+        """
+        raise NotImplementedError
 
 
 def region_consistency_check(
@@ -664,3 +670,30 @@ def mean(copy_numbers: Sequence[CopyNumber]) -> CopyNumber:
         )
     mean_func: Callable = copy_numbers[0].mean
     return mean_func(copy_numbers=copy_numbers)
+
+
+def correlation_coefficient(
+    copy_number_x: CopyNumber,
+    copy_number_y: CopyNumber,
+    method: Literal["pearson", "spearman"] = "pearson",
+) -> float:
+    """
+    Calculate the correlation coefficient between two copy number data. `CopyNumber.region_consistency_check()` will ber performed before calculating the correlation coefficient.
+
+    Parameters
+    ----------
+    copy_number_x : CopyNumber
+        A copy number data.
+    copy_number_y : CopyNumber
+        A copy number data.
+    method : Literal["pearson", "spearman"], default "pearson"
+        The method to calculate the correlation coefficient. Currently, only "pearson" is supported.
+
+    Returns
+    -------
+    float
+        Correlation coefficient between two copy number data.
+    """
+    return copy_number_x.correlation_coefficient(
+        copy_number_x=copy_number_x, copy_number_y=copy_number_y, method=method
+    )

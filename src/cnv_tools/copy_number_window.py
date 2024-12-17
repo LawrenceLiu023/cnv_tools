@@ -69,15 +69,19 @@ class CopyNumberWindow(CopyNumber):
         ----------
         copy_number_data : PolarsFrame
             A polars DataFrame / LazyFrame containing the following information:
+
             - chromosome
             - start position
             - end position
             - copy number
+
         chr_col : str, default "chr"
             The column name of the chromosome column. Supported chromosome formats include:
+
             - "chr1", "chr2", ..., "chrX", "chrY"
             - "Chr1", "Chr2", ..., "ChrX", "ChrY"
             - "1", "2", ..., "X", "Y"
+
         start_col : str, default "start"
             The column name of the start position column.
         end_col : str, default "end"

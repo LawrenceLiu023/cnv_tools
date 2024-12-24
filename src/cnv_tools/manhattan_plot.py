@@ -8,7 +8,6 @@ Manhattan plot for copy number data.
 
 from typing import Iterator, Self, Sequence
 
-import numpy as np
 import plotly.graph_objects as go
 import polars as pl
 
@@ -145,19 +144,47 @@ class ManhattanPlot:
 
             return intervals
 
+        def normal_chr_copy_number(copy_numbers: Sequence[float]) -> int:
+            """
+            Convert a list of copy numbers to a single integer copy number for a entire normal chromosome.
+
+            Parameters
+            ----------
+            copy_numbers : list[float]
+                A list of copy numbers. For example, [1.0, 1.1, 1.3]
+
+            Returns
+            -------
+            integer_copy_number : int
+                The integer copy number. The result will only be 1 or 2.
+            """
+            supported_chr_copy_numbers: list[int] = [1, 2]
+            max_chr_copy_number: int = int(max(supported_chr_copy_numbers))
+            min_chr_copy_number: int = int(min(supported_chr_copy_numbers))
+            copy_number_series: pl.Series = pl.Series(copy_numbers)
+            copy_number_series_lower_quantile: float = copy_number_series.quantile(
+                quantile=0.25, interpolation="lower"
+            )
+            copy_number_series_upper_quantile: float = copy_number_series.quantile(
+                quantile=0.75, interpolation="higher"
+            )
+            filtered_copy_number_series: pl.Series = copy_number_series.filter(
+                (copy_number_series >= copy_number_series_lower_quantile)
+                & (copy_number_series <= copy_number_series_upper_quantile)
+            )
+            print(filtered_copy_number_series.to_list())
+            integer_copy_number: int = int(
+                round(number=filtered_copy_number_series.mean(), ndigits=0)
+            )
+            integer_copy_number = int(min(integer_copy_number, max_chr_copy_number))
+            integer_copy_number = int(max(integer_copy_number, min_chr_copy_number))
+            return integer_copy_number
+
         for curr_trace in self.figure.data:
             if curr_trace.name.startswith("Chr") is False:
                 continue
             curr_trace_chr: str = str(curr_trace.name.removeprefix("Chr"))
-            curr_trace_integer_copy_number: int = int(
-                curr_trace.y.mean().round(decimals=0)
-            )
-            curr_trace_integer_copy_number = min(
-                curr_trace_integer_copy_number, 2
-            )  # 2 is the maximum copy number
-            curr_trace_integer_copy_number = max(
-                curr_trace_integer_copy_number, 1
-            )  # 1 is the minimum copy number
+            curr_trace_integer_copy_number:int = normal_chr_copy_number(curr_trace.y)
             curr_trace_x_min: int = int(curr_trace.x.min())
             curr_trace_x_max: int = int(curr_trace.x.max())
 

@@ -408,7 +408,7 @@ class CopyNumberWindow(CopyNumber):
         method: Literal["pearson", "spearman"] = "pearson",
     ) -> float:
         """
-        Calculate the correlation coefficient between two copy number data. `CopyNumber.region_consistency_check()` will ber performed before calculating the correlation coefficient.
+        Calculate the correlation coefficient between two copy number data. `CopyNumber.region_consistency_check()` will be performed before calculating the correlation coefficient.
 
         Parameters
         ----------
@@ -417,7 +417,7 @@ class CopyNumberWindow(CopyNumber):
         copy_number_y : CopyNumber
             A copy number data.
         method : Literal["pearson", "spearman"], default "pearson"
-            The method to calculate the correlation coefficient. Currently, only "pearson" is supported.
+            The method to calculate the correlation coefficient.
 
         Returns
         -------

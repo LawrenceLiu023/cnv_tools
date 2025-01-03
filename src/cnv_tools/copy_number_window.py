@@ -466,14 +466,11 @@ class CopyNumberWindow(CopyNumber):
             self.data.with_columns(
                 position=((pl.col("start") + pl.col("end")) // 2).cast(pl.Int64),
             )
-            .filter(pl.col("chr").is_in(self.CHROMOSOME_NAMES))
+            .filter(pl.col("chr").is_in(self._chromosome_names))
             .with_columns(
                 chr_number=pl.col("chr")
                 .replace(
-                    {
-                        "X": "23",
-                        "Y": "24",
-                    }
+                    self._chromosome_rename
                 )
                 .cast(pl.Int8)
             )
@@ -510,8 +507,8 @@ class CopyNumberWindow(CopyNumber):
             .update_yaxes(range=[0, (max_copy_number := 4)])
         )
         if (chr_count := len(manhattan_plot.data)) not in [
-            len(self.CHROMOSOME_NAMES),
-            len(self.CHROMOSOME_NAMES) - 1,
+            len(self._chromosome_names),
+            len(self._chromosome_names) - 1,
         ]:
             raise ValueError(
                 f"Unexpected number of chromosomes in the plot: {len(manhattan_plot.data)}."
@@ -542,21 +539,21 @@ class CopyNumberWindow(CopyNumber):
         curr_chr_x_max: int = manhattan_plot.data[curr_chr_index].x.max()
         curr_chr_x_med: int = (curr_chr_x_min + curr_chr_x_max) // 2
         tickvals: list[int] = [curr_chr_x_med]
-        ticktext: list[str] = [self.CHROMOSOME_NAMES[curr_chr_index]]
+        ticktext: list[str] = [self._chromosome_names[curr_chr_index]]
         minor_tickvals: list[int] = [curr_chr_x_min, curr_chr_x_max]
 
         # x-coordinate - position difference
         last_base = 0
         chr_pos_diff: list[list[str, int]] = [
-            [self.CHROMOSOME_NAMES[curr_chr_index], last_base]
+            [self._chromosome_names[curr_chr_index], last_base]
         ]
         for curr_chr_index in range(1, chr_count):
             # x-axis tick customise
             last_chr_copy_number_df: pl.DataFrame = manhattan_df.filter(
-                pl.col("chr") == self.CHROMOSOME_NAMES[curr_chr_index - 1]
+                pl.col("chr") == self._chromosome_names[curr_chr_index - 1]
             ).select(pl.col(["chr", "position"]))
             curr_chr_copy_number_df: pl.DataFrame = manhattan_df.filter(
-                pl.col("chr") == self.CHROMOSOME_NAMES[curr_chr_index]
+                pl.col("chr") == self._chromosome_names[curr_chr_index]
             ).select(pl.col(["chr", "position"]))
             curr_chr_x_min = (
                 manhattan_plot.data[curr_chr_index].x.min() + curr_chr_x_max
@@ -564,7 +561,7 @@ class CopyNumberWindow(CopyNumber):
             curr_chr_x_max = manhattan_plot.data[curr_chr_index].x.max()
             curr_chr_x_med = (curr_chr_x_min + curr_chr_x_max) // 2
             tickvals.append(curr_chr_x_med)
-            ticktext.append(self.CHROMOSOME_NAMES[curr_chr_index])
+            ticktext.append(self._chromosome_names[curr_chr_index])
             minor_tickvals.append(curr_chr_x_max)
 
             # x-coordinate - position difference
@@ -577,14 +574,14 @@ class CopyNumberWindow(CopyNumber):
 
             if np.unique(curr_chr_x_bp_diff_array).shape[0] != 1:
                 raise ValueError(
-                    f'Chromosome "{self.CHROMOSOME_NAMES[curr_chr_index]}" does not have a uniform "x-coordinate - position" difference.'
+                    f'Chromosome "{self._chromosome_names[curr_chr_index]}" does not have a uniform "x-coordinate - position" difference.'
                 )
             elif np.unique(curr_chr_x_bp_diff_array)[0] != last_base:
                 raise ValueError(
-                    f'Chromosome "{self.CHROMOSOME_NAMES[curr_chr_index]}" does not have expected "x-coordinate - position" difference. Expected: {last_base}, Actual: {curr_chr_x_bp_diff_array[0]}. Check the version of `dash_bio`.'
+                    f'Chromosome "{self._chromosome_names[curr_chr_index]}" does not have expected "x-coordinate - position" difference. Expected: {last_base}, Actual: {curr_chr_x_bp_diff_array[0]}. Check the version of `dash_bio`.'
                 )
 
-            chr_pos_diff.append([self.CHROMOSOME_NAMES[curr_chr_index], last_base])
+            chr_pos_diff.append([self._chromosome_names[curr_chr_index], last_base])
 
         manhattan_plot.update_xaxes(
             tickvals=tickvals,

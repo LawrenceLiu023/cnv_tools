@@ -356,7 +356,7 @@ class CopyNumberWindow(CopyNumber):
         data_number: int = len(copy_numbers)
         for i in range(data_number - 1):
             if not cls.region_consistency_check(copy_numbers[i], copy_numbers[i + 1]):
-                raise ValueError("The regions of copy number data are inconsistent.")
+                raise ValueError(f"The regions of copy number data are inconsistent. The inconsistency occurred between index {i} and {i+1}.")
 
         def copy_numbers_get_cn(i: int) -> pl.Series:
             if isinstance(copy_numbers[i].data, pl.LazyFrame):

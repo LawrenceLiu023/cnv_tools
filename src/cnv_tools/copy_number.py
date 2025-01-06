@@ -17,7 +17,20 @@ from cnv_tools._typing import PolarsFrame
 class CopyNumber(ABC):
     """A class for copy number data."""
 
-    CHROMOSOME_NAMES: list[str] = [str(x) for x in range(1, 23)] + ["X", "Y"]
+    _autosome_pair_number: int = 22
+    _chromosome_names: list[str] = [
+        str(x) for x in range(1, _autosome_pair_number + 1)
+    ] + [
+        "X",
+        "Y",
+    ]
+    # `dash_bio.ManhattanPlot` only supports chromosome names like 1, 2, 22, 23, 24 (home sapiens)
+    # This dict renames chromosomes like "X" to "23", "Y" to "24".
+    # Data type needs to be converted to integer before plotting.
+    _chromosome_rename: dict[str, str] = {
+        "X": str(_autosome_pair_number + 1),
+        "Y": str(_autosome_pair_number + 2),
+    }
 
     @abstractmethod
     def __init__(self) -> None:
@@ -35,6 +48,50 @@ class CopyNumber(ABC):
         if isinstance(self.data, pl.DataFrame):
             self.data = self.data.lazy()
         return self
+
+    @classmethod
+    def set_species(cls, species: str = "homo_sapiens") -> None:
+        """
+        Set the species of the copy number data.
+
+        The different species determine the chromosomes, resulting in different data preprocess methods and different manhattan plots. Invoke this method when the species is not homo sapiens.
+
+        Parameters
+        ----------
+        species : str, default "homo_sapiens"
+            The species of the copy number data. The default is "homo_sapiens".
+            Currently supported:
+
+            1. "homo_sapiens"
+            2. "mus_musculus"
+        """
+        match species:
+            case "homo_sapiens":
+                cls._autosome_pair_number = 22
+                cls._chromosome_names = [
+                    str(x) for x in range(1, cls._autosome_pair_number + 1)
+                ] + [
+                    "X",
+                    "Y",
+                ]
+                cls._chromosome_rename = {
+                    "X": str(cls._autosome_pair_number + 1),
+                    "Y": str(cls._autosome_pair_number + 2),
+                }
+            case "mus_musculus":
+                cls._autosome_pair_number = 19
+                cls._chromosome_names = [
+                    str(x) for x in range(1, cls._autosome_pair_number + 1)
+                ] + [
+                    "X",
+                    "Y",
+                ]
+                cls._chromosome_rename = {
+                    "X": str(cls._autosome_pair_number + 1),
+                    "Y": str(cls._autosome_pair_number + 2),
+                }
+            case _:
+                raise ValueError(f"Unsupported species: {species}")
 
     @classmethod
     def copy_number_preprocess(
@@ -139,21 +196,23 @@ class CopyNumber(ABC):
         copy_number_lf = copy_number_lf.cast(copy_number_lf_schema)
 
         copy_number_lf = copy_number_lf.filter(
-            pl.col("chr").is_in(cls.CHROMOSOME_NAMES)
-        ).sort(
-            [
-                pl.col("chr")
-                .replace(
-                    {
-                        "X": "23",
-                        "Y": "24",
-                    }
-                )
-                .cast(pl.Int8),
-                pl.col("start"),
-            ],
-            descending=False,
+            pl.col("chr").is_in(cls._chromosome_names)
         )
+        if start_col is None:
+            copy_number_lf = copy_number_lf.sort(
+                [
+                    pl.col("chr").replace(cls._chromosome_rename).cast(pl.Int8),
+                ],
+                descending=False,
+            )
+        else:
+            copy_number_lf = copy_number_lf.sort(
+                [
+                    pl.col("chr").replace(cls._chromosome_rename).cast(pl.Int8),
+                    pl.col("start"),
+                ],
+                descending=False,
+            )
 
         preprocessed_copy_number_data: PolarsFrame
         if isinstance(copy_number_data, pl.DataFrame):
@@ -284,16 +343,9 @@ class CopyNumber(ABC):
                 "cnv_type": pl.Categorical(ordering="lexical"),
             }
         )
-        cnv_lf = cnv_lf.filter(pl.col("chr").is_in(cls.CHROMOSOME_NAMES)).sort(
+        cnv_lf = cnv_lf.filter(pl.col("chr").is_in(cls._chromosome_names)).sort(
             [
-                pl.col("chr")
-                .replace(
-                    {
-                        "X": "23",
-                        "Y": "24",
-                    }
-                )
-                .cast(pl.Int8),
+                pl.col("chr").replace(cls._chromosome_rename).cast(pl.Int8),
                 pl.col("start"),
             ],
             descending=False,
@@ -678,7 +730,7 @@ def correlation_coefficient(
     method: Literal["pearson", "spearman"] = "pearson",
 ) -> float:
     """
-    Calculate the correlation coefficient between two copy number data. `CopyNumber.region_consistency_check()` will ber performed before calculating the correlation coefficient.
+    Calculate the correlation coefficient between two copy number data. `CopyNumber.region_consistency_check()` will be performed before calculating the correlation coefficient.
 
     Parameters
     ----------
@@ -687,7 +739,7 @@ def correlation_coefficient(
     copy_number_y : CopyNumber
         A copy number data.
     method : Literal["pearson", "spearman"], default "pearson"
-        The method to calculate the correlation coefficient. Currently, only "pearson" is supported.
+        The method to calculate the correlation coefficient.
 
     Returns
     -------

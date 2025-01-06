@@ -158,9 +158,9 @@ class ManhattanPlot:
             integer_copy_number : int
                 The integer copy number. The result will only be 1 or 2.
             """
-            supported_chr_copy_numbers: list[int] = [1, 2]
-            max_chr_copy_number: int = int(max(supported_chr_copy_numbers))
-            min_chr_copy_number: int = int(min(supported_chr_copy_numbers))
+            supported_normal_chr_copy_numbers: list[int] = [0, 1, 2]
+            max_chr_copy_number: int = int(max(supported_normal_chr_copy_numbers))
+            min_chr_copy_number: int = int(min(supported_normal_chr_copy_numbers))
             copy_number_series: pl.Series = pl.Series(copy_numbers)
             copy_number_series_lower_quantile: float = copy_number_series.quantile(
                 quantile=0.25, interpolation="lower"

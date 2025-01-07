@@ -128,7 +128,7 @@ class ManhattanPlot:
                 A list of intervals. For example, [[1, 3], [5, 6]]
             """
             if len(integers) < 1:
-                return (intervals := [])
+                return []
             left: int = integers[0]
             right: int = left
             intervals: list[list[int]] = []
@@ -172,7 +172,6 @@ class ManhattanPlot:
                 (copy_number_series >= copy_number_series_lower_quantile)
                 & (copy_number_series <= copy_number_series_upper_quantile)
             )
-            print(filtered_copy_number_series.to_list())
             integer_copy_number: int = int(
                 round(number=filtered_copy_number_series.mean(), ndigits=0)
             )
@@ -183,8 +182,10 @@ class ManhattanPlot:
         for curr_trace in self.figure.data:
             if curr_trace.name.startswith("Chr") is False:
                 continue
-            curr_trace_chr: str = str(curr_trace.name.removeprefix("Chr"))
-            curr_trace_integer_copy_number:int = normal_chr_copy_number(curr_trace.y)
+            curr_trace_chr: str = str(
+                curr_trace.name.removeprefix("Chr")
+            )  # Chr[number]. For example Chr1, Chr2, ..., Chr23, Chr24
+            curr_trace_integer_copy_number: int = normal_chr_copy_number(curr_trace.y)
             curr_trace_x_min: int = int(curr_trace.x.min())
             curr_trace_x_max: int = int(curr_trace.x.max())
 
@@ -197,10 +198,11 @@ class ManhattanPlot:
                 eager=True,
             )
             for curr_cnv_trace in cnv_traces:
-                if (
-                    curr_cnv_trace.name.removeprefix("cnv_").startswith(curr_trace_chr)
-                    is False
-                ):
+                curr_cnv_chr: str = curr_cnv_trace.name.removeprefix("cnv_")
+                for origin_chr, replace_chr in copy_number._chromosome_rename.items():
+                    if curr_cnv_chr.startswith(origin_chr + "_"):
+                        curr_cnv_chr = curr_cnv_chr.replace(origin_chr, replace_chr, 1)
+                if not (curr_cnv_chr.startswith(curr_trace_chr)):
                     continue
                 curr_cnv_start = int(curr_cnv_trace.x[0])
                 curr_cnv_end = int(curr_cnv_trace.x[1])
